@@ -76,3 +76,19 @@ class Article:
         results = cursor.fetchall()
         conn.close()
         return [cls(title=row['title'], author_id=row['author_id'], magazine_id=row['magazine_id'], id=row['id']) for row in results]
+
+    @classmethod
+    def most_prolific_author(cls):
+        """Find the author who has written the most articles."""
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT a.* FROM authors a
+            JOIN articles ar ON a.id = ar.author_id
+            GROUP BY a.id, a.name
+            ORDER BY COUNT(*) DESC
+            LIMIT 1
+        """)
+        result = cursor.fetchone()
+        conn.close()
+        return Author(name=result['name'], id=result['id']) if result else None

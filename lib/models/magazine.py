@@ -116,3 +116,49 @@ class Magazine:
         results = cursor.fetchall()
         conn.close()
         return [Author(name=row['name'], id=row['id']) for row in results]
+
+    @classmethod
+    def magazines_with_multiple_authors(cls):
+        """Find magazines with articles by at least 2 different authors."""
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT m.* FROM magazines m
+            JOIN articles a ON m.id = a.magazine_id
+            GROUP BY m.id, m.name, m.category
+            HAVING COUNT(DISTINCT a.author_id) >= 2
+        """)
+        results = cursor.fetchall()
+        conn.close()
+        return [cls(name=row['name'], category=row['category'], id=row['id']) for row in results]
+
+    @classmethod
+    def article_counts(cls):
+        """Count the number of articles in each magazine."""
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT m.id, m.name, m.category, COUNT(a.id) as article_count
+            FROM magazines m
+            LEFT JOIN articles a ON m.id = a.magazine_id
+            GROUP BY m.id, m.name, m.category
+        """)
+        results = cursor.fetchall()
+        conn.close()
+        return [(cls(name=row['name'], category=row['category'], id=row['id']), row['article_count']) for row in results]
+
+    @classmethod
+    def top_publisher(cls):
+        """Find the magazine with the most articles (bonus challenge)."""
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT m.* FROM magazines m
+            LEFT JOIN articles a ON m.id = a.magazine_id
+            GROUP BY m.id, m.name, m.category
+            ORDER BY COUNT(a.id) DESC
+            LIMIT 1
+        """)
+        result = cursor.fetchone()
+        conn.close()
+        return cls(name=result['name'], category=result['category'], id=result['id']) if result else None
