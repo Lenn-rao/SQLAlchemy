@@ -1,9 +1,11 @@
 from lib.db.connection import get_connection
+from lib.models.article import Article
+from lib.models.magazine import Magazine
 
 class Author:
     def __init__(self, name, id=None):
         self.id = id
-        self.name = name  # Uses property for validation
+        self.name = name
 
     @property
     def name(self):
@@ -52,3 +54,39 @@ class Author:
         result = cursor.fetchone()
         conn.close()
         return cls(name=result['name'], id=result['id']) if result else None
+
+    def articles(self):
+        """Get all articles written by this author."""
+        return Article.find_by_author(self.id)
+
+    def magazines(self):
+        """Find all magazines this author has contributed to."""
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT DISTINCT m.* FROM magazines m
+            JOIN articles a ON m.id = a.magazine_id
+            WHERE a.author_id = ?
+        """, (self.id,))
+        results = cursor.fetchall()
+        conn.close()
+        return [Magazine(name=row['name'], category=row['category'], id=row['id']) for row in results]
+
+    def add_article(self, magazine, title):
+        """Creates and inserts a new article for this author and magazine."""
+        article = Article(title=title, author_id=self.id, magazine_id=magazine.id)
+        article.save()
+        return article
+
+    def topic_areas(self):
+        """Returns unique categories of magazines this author has contributed to."""
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT DISTINCT m.category FROM magazines m
+            JOIN articles a ON m.id = a.magazine_id
+            WHERE a.author_id = ?
+        """, (self.id,))
+        results = cursor.fetchall()
+        conn.close()
+        return [row['category'] for row in results]

@@ -1,10 +1,12 @@
 from lib.db.connection import get_connection
+from lib.models.article import Article
+from lib.models.author import Author
 
 class Magazine:
     def __init__(self, name, category, id=None):
         self.id = id
-        self.name = name  # Uses property for validation
-        self.category = category  # Uses property for validation
+        self.name = name
+        self.category = category
 
     @property
     def name(self):
@@ -73,3 +75,44 @@ class Magazine:
         results = cursor.fetchall()
         conn.close()
         return [cls(name=row['name'], category=row['category'], id=row['id']) for row in results]
+
+    def articles(self):
+        """Returns list of all articles published in this magazine."""
+        return Article.find_by_magazine(self.id)
+
+    def contributors(self):
+        """Returns unique list of authors who have written for this magazine."""
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT DISTINCT a.* FROM authors a
+            JOIN articles ar ON a.id = ar.author_id
+            WHERE ar.magazine_id = ?
+        """, (self.id,))
+        results = cursor.fetchall()
+        conn.close()
+        return [Author(name=row['name'], id=row['id']) for row in results]
+
+    def article_titles(self):
+        """Returns list of titles of all articles in this magazine."""
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT title FROM articles WHERE magazine_id = ?", (self.id,))
+        results = cursor.fetchall()
+        conn.close()
+        return [row['title'] for row in results]
+
+    def contributing_authors(self):
+        """Returns list of authors with more than 2 articles in this magazine."""
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT a.* FROM authors a
+            JOIN articles ar ON a.id = ar.author_id
+            WHERE ar.magazine_id = ?
+            GROUP BY a.id, a.name
+            HAVING COUNT(*) > 2
+        """, (self.id,))
+        results = cursor.fetchall()
+        conn.close()
+        return [Author(name=row['name'], id=row['id']) for row in results]

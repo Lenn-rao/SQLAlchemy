@@ -1,9 +1,11 @@
 from lib.db.connection import get_connection
+from lib.models.author import Author
+from lib.models.magazine import Magazine
 
 class Article:
     def __init__(self, title, author_id, magazine_id, id=None):
         self.id = id
-        self.title = title  # Uses property for validation
+        self.title = title
         self.author_id = author_id
         self.magazine_id = magazine_id
 
