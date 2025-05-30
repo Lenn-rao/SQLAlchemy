@@ -1,4 +1,4 @@
-# SQLAlchemy# Code Challenge Project
+# Code Challenge Project
 
 ## Overview
 A Python application to manage authors, articles, and magazines using a SQLite database and raw SQL queries within model classes.
@@ -20,3 +20,15 @@ A Python application to manage authors, articles, and magazines using a SQLite d
 - Raw SQL queries in models.
 - Transaction handling and error management.
 - Test coverage with pytest.
+
+## Features
+- **Author**: Save, find by ID/name, articles, magazines, add article, topic areas.
+- **Magazine**: Save, find by ID/name/category, articles, contributors, article titles, contributing authors (>2 articles).
+- **Article**: Save, find by ID/title/author/magazine, most prolific author.
+- **Complex Queries**: Magazines with multiple authors, article counts, top publisher.
+- **Transactions**: Context managers for safe database operations.
+- **Indexes**: Added for query performance.
+
+## Testing
+- Run `pytest` from the root directory to verify all SQL operations and relationships.
+- Debug with `python lib/debug.py` for interactive queries.
